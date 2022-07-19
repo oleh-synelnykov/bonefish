@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(bonefish)
 
+set(CMAKE_CXX_STANDARD 17)
+
 option(shared "build bonefish as a shared library" OFF)
 option(stdlib "When building with clang, you can choose libc++ (default) or libstdc++" OFF)
 
@@ -45,6 +47,8 @@ endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 ${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_C_FLAGS_DEBUG "-O0 ${CMAKE_C_FLAGS_DEBUG}")
+
+SET (CMAKE_CXX_FLAGS "-DMSGPACK_DEFAULT_API_VERSION=1 ${CMAKE_CXX_FLAGS}")
 
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
