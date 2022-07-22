@@ -57,16 +57,6 @@ void websocket_server_impl::start(const boost::asio::ip::address& ip_address, ui
 
     std::weak_ptr<websocket_server_impl> weak_self = shared_from_this();
 
-    auto init_handler = [weak_self](
-            websocketpp::connection_hdl handle,
-            boost::asio::ip::tcp::socket& socket) {
-        auto shared_self = weak_self.lock();
-        if (shared_self) {
-            shared_self->on_socket_init(handle, socket);
-        }
-    };
-    m_server->set_socket_init_handler(init_handler);
-
     auto open_handler = [weak_self](websocketpp::connection_hdl handle) {
         auto shared_self = weak_self.lock();
         if (shared_self) {
@@ -131,14 +121,12 @@ void websocket_server_impl::shutdown()
     m_server->stop_listening();
 }
 
-void websocket_server_impl::on_socket_init(websocketpp::connection_hdl handle,
-        boost::asio::ip::tcp::socket& s)
-{
-    s.set_option(boost::asio::ip::tcp::no_delay(true));
-}
-
 void websocket_server_impl::on_open(websocketpp::connection_hdl handle)
 {
+    websocketpp::server<websocket_config>::connection_ptr connection =
+            m_server->get_con_from_hdl(handle);
+
+    connection->get_socket().set_option(boost::asio::ip::tcp::no_delay(true));
 }
 
 void websocket_server_impl::on_close(websocketpp::connection_hdl handle)
