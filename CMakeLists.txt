@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 option(shared "build bonefish as a shared library" OFF)
 option(stdlib "When building with clang, you can choose libc++ (default) or libstdc++" OFF)
+option(examples "build examples" OFF)
 
 set(BOOST_COMPONENTS program_options system thread)
 
@@ -72,18 +73,20 @@ find_package(RT)
 find_package(Threads)
 
 include_directories(
-    ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/third-party/cppcodec
-    ${CMAKE_SOURCE_DIR}/third-party/json-msgpack/include
-    ${CMAKE_SOURCE_DIR}/third-party/msgpack-c/include
-    ${CMAKE_SOURCE_DIR}/third-party/rapidjson/include
-    ${CMAKE_SOURCE_DIR}/third-party/websocketpp
+    src
+    third-party/cppcodec
+    third-party/json-msgpack/include
+    third-party/msgpack-c/include
+    third-party/rapidjson/include
+    third-party/websocketpp
     ${Boost_INCLUDE_DIRS}
 )
 
 link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 
-add_subdirectory(examples)
+if(examples)
+    add_subdirectory(examples)
+endif()
 add_subdirectory(src)
 add_subdirectory(daemon)
 add_subdirectory(test)
