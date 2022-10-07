@@ -1,5 +1,5 @@
 /**
- *  Copyright (C) 2015 Topology LP
+ *  Copyright (C) 2022 Vizio Services
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,31 +14,19 @@
  *  limitations under the License.
  */
 
-#ifndef BONEFISH_SESSION_WAMP_SESSION_STATE_HPP
-#define BONEFISH_SESSION_WAMP_SESSION_STATE_HPP
+#ifndef BONEFISH_AUTHENTICATION_WAMP_AUTHENTICATION_INFO_HPP
+#define BONEFISH_AUTHENTICATION_WAMP_AUTHENTICATION_INFO_HPP
 
-#include <cstdint>
-#include <ostream>
 #include <string>
 
 namespace bonefish {
 
-enum class wamp_session_state : uint8_t {
-    NONE,
-    CHALLENGING,
-    OPEN,
-    CLOSING,
-    CLOSED
+struct wamp_authentication_info
+{
+    std::string id;
+    std::string method;
 };
 
-const char* session_state_to_string(const wamp_session_state& state);
+}  // namespace bonefish
 
-inline std::ostream& operator<<(std::ostream& os, const wamp_session_state& state)
-{
-    os << bonefish::session_state_to_string(state);
-    return os;
-}
-
-} // namespace bonefish
-
-#endif // BONEFISH_SESSION_WAMP_SESSION_STATE_HPP
+#endif  // BONEFISH_AUTHENTICATION_WAMP_AUTHENTICATION_INFO_HPP

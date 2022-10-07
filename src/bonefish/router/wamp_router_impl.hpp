@@ -17,6 +17,7 @@
 #ifndef BONEFISH_WAMP_ROUTER_IMPL_HPP
 #define BONEFISH_WAMP_ROUTER_IMPL_HPP
 
+#include <bonefish/authentication/wamp_authentication_info.hpp>
 #include <bonefish/broker/wamp_broker.hpp>
 #include <bonefish/dealer/wamp_dealer.hpp>
 #include <bonefish/messages/wamp_welcome_details.hpp>
@@ -27,6 +28,9 @@
 
 namespace bonefish {
 
+class wamp_authenticator;
+
+class wamp_authenticate_message;
 class wamp_call_message;
 class wamp_error_message;
 class wamp_goodbye_message;
@@ -44,7 +48,10 @@ class wamp_yield_message;
 class wamp_router_impl
 {
 public:
-    wamp_router_impl(boost::asio::io_service& io_service, const std::string& realm);
+    wamp_router_impl(
+        boost::asio::io_service& io_service,
+        const std::string& realm,
+        std::shared_ptr<wamp_authenticator> authenticator = nullptr);
     ~wamp_router_impl();
 
     const std::string& get_realm() const;
@@ -55,6 +62,8 @@ public:
     bool attach_session(const std::shared_ptr<wamp_session>& session);
     bool detach_session(const wamp_session_id& session_id);
 
+    void process_authenticate_message(const wamp_session_id& session_id,
+            wamp_authenticate_message* call_message);
     void process_call_message(const wamp_session_id& session_id,
             wamp_call_message* call_message);
     void process_error_message(const wamp_session_id& session_id,
@@ -81,8 +90,12 @@ private:
     wamp_broker m_broker;
     wamp_dealer m_dealer;
     wamp_welcome_details m_welcome_details;
+    std::shared_ptr<wamp_authenticator> m_authenticator;
     std::shared_ptr<wamp_session_id_generator> m_session_id_generator;
     std::unordered_map<wamp_session_id, std::shared_ptr<wamp_session>> m_sessions;
+
+    // wamp_authentication_info is kept in a separate map because not all sessions may have it
+    std::unordered_map<wamp_session_id, wamp_authentication_info> m_session_auth_info;
 };
 
 } // namespace bonefish

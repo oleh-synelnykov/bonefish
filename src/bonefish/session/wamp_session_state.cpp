@@ -28,6 +28,9 @@ const char* session_state_to_string(const wamp_session_state& state)
         case wamp_session_state::NONE:
             str = "none";
             break;
+        case wamp_session_state::CHALLENGING:
+            str = "challenging";
+            break;
         case wamp_session_state::OPEN:
             str = "open";
             break;

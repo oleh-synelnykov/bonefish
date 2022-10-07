@@ -69,10 +69,22 @@ void operator<< (object::with_zone& details,
 
     details.type = type::MAP;
     details.via.map.size = 1;
+
+    const auto extra_details = welcome_details.get_details();
+    if (extra_details.type == type::MAP && extra_details.via.map.size > 0) {
+        details.via.map.size += extra_details.via.map.size;
+    }
+
     details.via.map.ptr = static_cast<object_kv*>(
             details.zone.allocate_align(sizeof(object_kv) * details.via.map.size));
     details.via.map.ptr[0].key = object(std::string("roles"), details.zone);
     details.via.map.ptr[0].val = *(static_cast<object*>(&roles));
+
+    if (extra_details.type == type::MAP && extra_details.via.map.size > 0) {
+        for (size_t i = 0; i < extra_details.via.map.size; ++i) {
+            details.via.map.ptr[i + 1] = extra_details.via.map.ptr[i];
+        }
+    }
 }
 
 } // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
