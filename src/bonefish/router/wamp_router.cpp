@@ -20,6 +20,7 @@
 #include <bonefish/identifiers/wamp_session_id.hpp>
 #include <bonefish/identifiers/wamp_session_id_generator.hpp>
 #include <bonefish/messages/wamp_abort_message.hpp>
+#include <bonefish/messages/wamp_authenticate_message.hpp>
 #include <bonefish/messages/wamp_error_message.hpp>
 #include <bonefish/messages/wamp_goodbye_message.hpp>
 #include <bonefish/messages/wamp_hello_details.hpp>
@@ -38,8 +39,11 @@
 
 namespace bonefish {
 
-wamp_router::wamp_router(boost::asio::io_service& io_service, const std::string& realm)
-    : m_impl(new wamp_router_impl(io_service, realm))
+wamp_router::wamp_router(
+        boost::asio::io_service& io_service,
+        const std::string& realm,
+        std::shared_ptr<wamp_authenticator> authenticator)
+    : m_impl(new wamp_router_impl(io_service, realm, std::move(authenticator)))
 {
 }
 
@@ -88,6 +92,12 @@ void wamp_router::process_goodbye_message(const wamp_session_id& session_id,
         wamp_goodbye_message* goodbye_message)
 {
     m_impl->process_goodbye_message(session_id, goodbye_message);
+}
+
+void wamp_router::process_authenticate_message(const wamp_session_id& session_id,
+        wamp_authenticate_message* authenticate_message)
+{
+    m_impl->process_authenticate_message(session_id, authenticate_message);
 }
 
 void wamp_router::process_call_message(const wamp_session_id& session_id,

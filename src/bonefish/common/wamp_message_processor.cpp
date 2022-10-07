@@ -18,6 +18,7 @@
 #include <bonefish/identifiers/wamp_session_id.hpp>
 #include <bonefish/identifiers/wamp_session_id_generator.hpp>
 #include <bonefish/messages/wamp_abort_message.hpp>
+#include <bonefish/messages/wamp_authenticate_message.hpp>
 #include <bonefish/messages/wamp_call_message.hpp>
 #include <bonefish/messages/wamp_error_message.hpp>
 #include <bonefish/messages/wamp_goodbye_message.hpp>
@@ -47,7 +48,14 @@ void wamp_message_processor::process_message(
     switch (message->get_type())
     {
         case wamp_message_type::AUTHENTICATE:
+        {
+            std::shared_ptr<wamp_router> router = m_routers->get_router(connection->get_realm());
+            if (router) {
+                wamp_authenticate_message* authenticate_message = static_cast<wamp_authenticate_message*>(message.get());
+                router->process_authenticate_message(connection->get_session_id(), authenticate_message);
+            }
             break;
+        }
         case wamp_message_type::CALL:
         {
             std::shared_ptr<wamp_router> router = m_routers->get_router(connection->get_realm());

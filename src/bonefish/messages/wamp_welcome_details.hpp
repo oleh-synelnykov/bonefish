@@ -39,8 +39,12 @@ public:
     const wamp_role* get_role(wamp_role_type role_type) const;
     void add_role(wamp_role&& role);
 
+    const msgpack::object& get_details() const;
+    void set_details(const msgpack::object& details);
+
 private:
     std::unordered_set<wamp_role> m_roles;
+    msgpack::object m_details;
 };
 
 inline wamp_welcome_details::wamp_welcome_details()
@@ -72,6 +76,21 @@ inline void wamp_welcome_details::add_role(wamp_role&& role)
 {
     m_roles.insert(std::move(role));
 }
+
+inline const msgpack::object& wamp_welcome_details::get_details() const
+{
+    return m_details;
+}
+
+inline void wamp_welcome_details::set_details(const msgpack::object& details)
+{
+    if (details.type == msgpack::type::MAP) {
+        m_details = details;
+    } else {
+        throw std::invalid_argument("invalid details");
+    }
+}
+
 
 } // namespace bonefish
 

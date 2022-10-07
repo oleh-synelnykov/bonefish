@@ -1,5 +1,6 @@
 /**
  *  Copyright (C) 2015 Topology LP
+ *  Copyright (C) 2022 Vizio Services
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,31 +15,18 @@
  *  limitations under the License.
  */
 
-#ifndef BONEFISH_SESSION_WAMP_SESSION_STATE_HPP
-#define BONEFISH_SESSION_WAMP_SESSION_STATE_HPP
-
-#include <cstdint>
-#include <ostream>
-#include <string>
+#include <bonefish/messages/wamp_challenge_extra.hpp>
 
 namespace bonefish {
 
-enum class wamp_session_state : uint8_t {
-    NONE,
-    CHALLENGING,
-    OPEN,
-    CLOSING,
-    CLOSED
-};
-
-const char* session_state_to_string(const wamp_session_state& state);
-
-inline std::ostream& operator<<(std::ostream& os, const wamp_session_state& state)
+msgpack::object wamp_challenge_extra::marshal(msgpack::zone& zone) const
 {
-    os << bonefish::session_state_to_string(state);
-    return os;
+    return msgpack::object(m_extra, zone);
+}
+
+void wamp_challenge_extra::unmarshal(const msgpack::object& object)
+{
+    object.convert(m_extra);
 }
 
 } // namespace bonefish
-
-#endif // BONEFISH_SESSION_WAMP_SESSION_STATE_HPP

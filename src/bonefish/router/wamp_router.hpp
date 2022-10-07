@@ -23,8 +23,10 @@
 
 namespace bonefish {
 
+class wamp_authenticator;
 class wamp_broker;
 class wamp_dealer;
+class wamp_authenticate_message;
 class wamp_call_message;
 class wamp_error_message;
 class wamp_goodbye_message;
@@ -44,7 +46,10 @@ class wamp_yield_message;
 class wamp_router
 {
 public:
-    wamp_router(boost::asio::io_service& io_service, const std::string& realm);
+    wamp_router(
+        boost::asio::io_service& io_service,
+        const std::string& realm,
+        std::shared_ptr<wamp_authenticator> authenticator = nullptr);
     ~wamp_router();
 
     const std::string& get_realm() const;
@@ -55,6 +60,8 @@ public:
     void close_session(const wamp_session_id& session_id, const std::string& reason);
     bool detach_session(const wamp_session_id& session_id);
 
+    void process_authenticate_message(const wamp_session_id& session_id,
+            wamp_authenticate_message* call_message);
     void process_call_message(const wamp_session_id& session_id,
             wamp_call_message* call_message);
     void process_error_message(const wamp_session_id& session_id,

@@ -3,8 +3,11 @@ set(SOURCES
     bonefish/common/wamp_message_processor.cpp
     bonefish/dealer/wamp_dealer.cpp
     bonefish/identifiers/wamp_session_id_factory.cpp
+    bonefish/messages/wamp_authenticate_extra.cpp
     bonefish/messages/wamp_call_options.cpp
+    bonefish/messages/wamp_challenge_extra.cpp
     bonefish/messages/wamp_hello_details.cpp
+    bonefish/messages/wamp_hello_details_advanced.cpp
     bonefish/messages/wamp_invocation_details.cpp
     bonefish/messages/wamp_message_defaults.cpp
     bonefish/messages/wamp_message_factory.cpp
@@ -35,6 +38,8 @@ set(SOURCES
     bonefish/websocket/websocket_transport.cpp)
 
 set(PUBLIC_HEADERS
+    bonefish/authentication/wamp_authentication_info.hpp
+    bonefish/authentication/wamp_authenticator.hpp
     bonefish/native/native_connector.hpp
     bonefish/native/native_endpoint.hpp
     bonefish/native/native_message_queue.hpp
@@ -79,12 +84,17 @@ set(PRIVATE_HEADERS
     bonefish/identifiers/wamp_subscription_id.hpp
     bonefish/identifiers/wamp_subscription_id_generator.hpp
     bonefish/messages/wamp_abort_message.hpp
+    bonefish/messages/wamp_authenticate_extra.hpp
+    bonefish/messages/wamp_authenticate_message.hpp
     bonefish/messages/wamp_call_message.hpp
     bonefish/messages/wamp_call_options.hpp
+    bonefish/messages/wamp_challenge_extra.hpp
+    bonefish/messages/wamp_challenge_message.hpp
     bonefish/messages/wamp_error_message.hpp
     bonefish/messages/wamp_event_message.hpp
     bonefish/messages/wamp_goodbye_message.hpp
     bonefish/messages/wamp_hello_details.hpp
+    bonefish/messages/wamp_hello_details_advanced.hpp
     bonefish/messages/wamp_hello_message.hpp
     bonefish/messages/wamp_invocation_details.hpp
     bonefish/messages/wamp_invocation_message.hpp
