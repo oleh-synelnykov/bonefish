@@ -44,4 +44,9 @@ void websocket_server::shutdown()
     m_impl->shutdown();
 }
 
+void websocket_server::set_connection_validation_handler(std::function<bool(websocket_connection_ptr)> handler)
+{
+    m_impl->set_connection_validation_handler(std::move(handler));
+}
+
 } // namespace bonefish

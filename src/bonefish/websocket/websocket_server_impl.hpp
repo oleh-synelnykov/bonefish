@@ -19,6 +19,7 @@
 
 #include <bonefish/common/wamp_message_processor.hpp>
 #include <bonefish/websocket/websocket_config.hpp>
+#include <bonefish/websocket/websocket_connection.hpp>
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/address.hpp>
@@ -44,6 +45,8 @@ public:
     void start(const boost::asio::ip::address& ip_address, uint16_t port);
     void shutdown();
 
+    void set_connection_validation_handler(std::function<bool(websocket_connection_ptr)> handler);
+
 private:
     void on_open(websocketpp::connection_hdl handle);
     void on_close(websocketpp::connection_hdl handle);
@@ -58,6 +61,7 @@ private:
     std::shared_ptr<wamp_routers> m_routers;
     std::shared_ptr<wamp_serializers> m_serializers;
     wamp_message_processor m_message_processor;
+    std::function<bool(websocket_connection_ptr)> m_connection_validation_handler;
 };
 
 } // namespace bonefish

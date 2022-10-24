@@ -121,6 +121,11 @@ void websocket_server_impl::shutdown()
     m_server->stop_listening();
 }
 
+void websocket_server_impl::set_connection_validation_handler(std::function<bool(websocket_connection_ptr)> handler)
+{
+    m_connection_validation_handler = std::move(handler);
+}
+
 void websocket_server_impl::on_open(websocketpp::connection_hdl handle)
 {
     websocketpp::server<websocket_config>::connection_ptr connection =
@@ -161,6 +166,13 @@ bool websocket_server_impl::on_validate(websocketpp::connection_hdl handle)
 {
     websocketpp::server<websocket_config>::connection_ptr connection =
             m_server->get_con_from_hdl(handle);
+
+    if (m_connection_validation_handler) {
+        if (!m_connection_validation_handler(connection)) {
+            BONEFISH_ERROR("Connection validation failed ... rejecting");
+            return false;
+        }
+    }
 
     const auto& subprotocols = connection->get_requested_subprotocols();
     for (const auto& subprotocol : subprotocols) {

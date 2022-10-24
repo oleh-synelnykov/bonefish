@@ -137,6 +137,7 @@ set(PRIVATE_HEADERS
     bonefish/transport/wamp_transport.hpp
     bonefish/utility/wamp_uri.hpp
     bonefish/websocket/websocket_config.hpp
+    bonefish/websocket/websocket_connection.hpp
     bonefish/websocket/websocket_protocol.hpp
     bonefish/websocket/websocket_server_impl.hpp
     bonefish/websocket/websocket_transport.hpp)

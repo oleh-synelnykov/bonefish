@@ -17,6 +17,7 @@
 #ifndef BONEFISH_WEBSOCKET_WEBSOCKET_SERVER_HPP
 #define BONEFISH_WEBSOCKET_WEBSOCKET_SERVER_HPP
 
+#include <bonefish/websocket/websocket_connection.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <cstdint>
@@ -38,6 +39,8 @@ public:
 
     void start(const boost::asio::ip::address& ip_address, uint16_t port);
     void shutdown();
+
+    void set_connection_validation_handler(std::function<bool(websocket_connection_ptr)> handler);
 
 private:
     std::shared_ptr<websocket_server_impl> m_impl;
