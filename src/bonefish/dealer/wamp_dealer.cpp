@@ -22,6 +22,7 @@
 #include <bonefish/messages/wamp_error_message.hpp>
 #include <bonefish/messages/wamp_invocation_details.hpp>
 #include <bonefish/messages/wamp_invocation_message.hpp>
+#include <bonefish/messages/wamp_publish_message.hpp>
 #include <bonefish/messages/wamp_register_message.hpp>
 #include <bonefish/messages/wamp_registered_message.hpp>
 #include <bonefish/messages/wamp_result_details.hpp>
@@ -45,12 +46,14 @@ wamp_dealer::wamp_dealer(boost::asio::io_service& io_service)
     , m_registration_id_generator()
     , m_sessions()
     , m_session_registrations()
+    , m_builtin_procedures()
     , m_registered_procedures()
     , m_procedure_registrations()
     , m_pending_invocations()
     , m_pending_caller_invocations()
     , m_pending_callee_invocations()
 {
+    register_builtin_procedures();
 }
 
 wamp_dealer::~wamp_dealer()
@@ -177,6 +180,12 @@ void wamp_dealer::process_call_message(const wamp_session_id& session_id,
     if (!is_valid_uri(procedure)) {
         send_error(session_itr->second->get_transport(), call_message->get_type(),
                 call_message->get_request_id(), "wamp.error.invalid_uri");
+        return;
+    }
+
+    auto builtin_procedure_itr = m_builtin_procedures.find(procedure);
+    if (builtin_procedure_itr != m_builtin_procedures.end() && builtin_procedure_itr->second) {
+        builtin_procedure_itr->second(session_id, call_message);
         return;
     }
 
@@ -536,6 +545,112 @@ void wamp_dealer::invocation_timeout_handler(const wamp_request_id& request_id,
     // be cleaned up. So we don't use an iterator here to erase the pending
     // invocation because it may have just been invalidated above.
     m_pending_invocations.erase(request_id);
+}
+
+void wamp_dealer::register_builtin_procedures()
+{
+    using namespace std::placeholders;
+
+    m_builtin_procedures["wamp.session.add_testament"] =
+        std::bind(&wamp_dealer::wamp_session_add_testament, this, _1, _2);
+
+    m_builtin_procedures["wamp.session.flush_testaments"] =
+        std::bind(&wamp_dealer::wamp_session_flush_testaments, this, _1, _2);
+}
+
+void wamp_dealer::wamp_session_add_testament(const wamp_session_id& session_id, wamp_call_message* call_message)
+{
+    auto session_itr = m_sessions.find(session_id);
+    if (session_itr == m_sessions.end()) {
+        throw std::logic_error("wamp.error.no_such_session");
+    }
+
+    // Parse the call message and store all the information in publish message (such a shortcut)
+
+    // Positional arguments:
+    //   topic|uri - the topic to publish the event on
+    //   args|list - positional arguments for the event
+    //   kwargs|dict - keyword arguments for the event
+    // Keyword arguments:
+    //   publish_options|dict - options for the event when it is published -- see Publish.Options. Not all options may
+    //                          be honoured (for example, acknowledge). By default, there are no options.
+    //   scope|string - When the testament should be published. Valid values are detached (when the WAMP session is
+    //                  detached, for example, when using Event Retention) or destroyed (when the WAMP session is
+    //                  finalized and destroyed on the Broker). Default MUST be destroyed.
+    // wamp.session.add_testament does not return a value.
+
+    std::tuple<std::string, msgpack::object, msgpack::object> args;
+    call_message->get_arguments().convert(args);
+
+    std::unordered_map<std::string, msgpack::object> kwargs;
+    call_message->get_arguments_kw().convert(kwargs);
+
+    const wamp_request_id request_id = m_request_id_generator.generate();
+
+    // Create publish message and store topic, positional and keyword arguments in it
+    std::unique_ptr<wamp_publish_message> publish_message(new wamp_publish_message(call_message->release_zone()));
+    // Also, options are not supported at the moment, defaulting to empty
+    publish_message->set_request_id(request_id);
+    publish_message->set_topic(std::get<0>(args));
+    publish_message->set_arguments(std::get<1>(args));
+    publish_message->set_arguments_kw(std::get<2>(args));
+
+    // Get the scope
+    wamp_session::testament_scope scope = wamp_session::testament_scope::destroyed;
+    auto scope_itr = kwargs.find("scope");
+    if (scope_itr != kwargs.end() && scope_itr->second.as<std::string>() == "detached") {
+        scope = wamp_session::testament_scope::detached;
+    }
+
+    BONEFISH_TRACE("wamp_session_add_testament %1%, %2%", *session_itr->second % *call_message);
+
+    // Add testament
+    session_itr->second->add_testament(scope, std::move(publish_message));
+
+    // Send the result back
+    std::unique_ptr<wamp_result_message> result_message(new wamp_result_message());
+    result_message->set_request_id(call_message->get_request_id());
+
+    // If we fail to send the result message it is most likely that the
+    // underlying network connection has been closed/lost which means
+    // that the caller is no longer reachable on this session. So all
+    // we do here is trace the fact that this event occured.
+    BONEFISH_TRACE("wamp_session_add_testament %1%, %2%, %3%", *session_itr->second % *call_message % *result_message);
+    if (!session_itr->second->get_transport()->send_message(std::move(*result_message))) {
+        BONEFISH_ERROR("failed to send result message to caller: network failure");
+    }
+}
+
+void wamp_dealer::wamp_session_flush_testaments(const wamp_session_id& session_id, wamp_call_message* call_message)
+{
+    auto session_itr = m_sessions.find(session_id);
+    if (session_itr == m_sessions.end()) {
+        throw std::logic_error("wamp.error.no_such_session");
+    }
+
+    std::unordered_map<std::string, msgpack::object> kwargs;
+    call_message->get_arguments_kw().convert(kwargs);
+
+    wamp_session::testament_scope scope = wamp_session::testament_scope::destroyed;
+    auto scope_itr = kwargs.find("scope");
+    if (scope_itr != kwargs.end() && scope_itr->second.as<std::string>() == "detached") {
+        scope = wamp_session::testament_scope::detached;
+    }
+
+    session_itr->second->flush_testaments(scope);
+
+    // Send the result back
+    std::unique_ptr<wamp_result_message> result_message(new wamp_result_message());
+    result_message->set_request_id(call_message->get_request_id());
+
+    // If we fail to send the result message it is most likely that the
+    // underlying network connection has been closed/lost which means
+    // that the caller is no longer reachable on this session. So all
+    // we do here is trace the fact that this event occured.
+    BONEFISH_TRACE("wamp_session_flush_testaments %1%, %2% ,%3%", *session_itr->second % static_cast<int>(scope) % *result_message);
+    if (!session_itr->second->get_transport()->send_message(std::move(*result_message))) {
+        BONEFISH_ERROR("failed to send result message to caller: network failure");
+    }
 }
 
 } // namespace bonefish

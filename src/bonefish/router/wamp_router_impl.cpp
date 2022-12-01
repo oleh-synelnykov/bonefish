@@ -117,6 +117,7 @@ wamp_router_impl::wamp_router_impl(
     wamp_role_features dealer_features;
     dealer_features.set_attribute("progressive_call_results", true);
     dealer_features.set_attribute("call_timeout", true);
+    dealer_features.set_attribute("testament_meta_api", true);
 
     wamp_role dealer_role(wamp_role_type::DEALER);
     dealer_role.set_features(std::move(dealer_features));
@@ -287,6 +288,8 @@ void wamp_router_impl::process_hello_message(const wamp_session_id& session_id,
 void wamp_router_impl::process_goodbye_message(const wamp_session_id& session_id,
         wamp_goodbye_message* goodbye_message)
 {
+    BONEFISH_TRACE("process_goodbye_message %1%", session_id);
+
     auto session_itr = m_sessions.find(session_id);
     if (session_itr == m_sessions.end()) {
         throw std::logic_error("session does not exist");
@@ -295,7 +298,7 @@ void wamp_router_impl::process_goodbye_message(const wamp_session_id& session_id
     auto& session = session_itr->second;
     if (session->get_state() == wamp_session_state::OPEN) {
         std::unique_ptr<wamp_goodbye_message> message(new wamp_goodbye_message);
-        message->set_reason("wamp.error.goodbye_and_out");
+        message->set_reason("wamp.close.goodbye_and_out");
         session->set_state(wamp_session_state::CLOSED);
 
         BONEFISH_TRACE("%1%, %2%", *session % *goodbye_message);

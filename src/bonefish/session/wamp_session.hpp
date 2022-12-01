@@ -34,10 +34,17 @@ namespace bonefish {
 
 class wamp_hello_message;
 class wamp_message;
+class wamp_publish_message;
 class wamp_transport;
 
 class wamp_session
 {
+public:
+    enum class testament_scope {
+        detached,
+        destroyed, /// default
+    };
+
 public:
     wamp_session();
     wamp_session(
@@ -61,12 +68,17 @@ public:
     void add_role(const wamp_role& role);
     void add_role(wamp_role&& role);
 
+    void add_testament(const testament_scope scope, std::unique_ptr<wamp_publish_message>&& testament);
+    void flush_testaments(const testament_scope scope);
+    const std::vector<std::unique_ptr<wamp_publish_message>>* get_testaments_for_scope(const testament_scope scope) const;
+
 private:
     const std::string m_realm;
     wamp_session_id m_session_id;
     wamp_session_state m_session_state;
     std::unordered_set<wamp_role> m_roles;
     std::unique_ptr<wamp_transport> m_transport;
+    std::map<testament_scope, std::vector<std::unique_ptr<wamp_publish_message>>> m_testaments;
 };
 
 inline wamp_session::wamp_session()
@@ -153,6 +165,26 @@ inline void wamp_session::add_role(const wamp_role& role)
 inline void wamp_session::add_role(wamp_role&& role)
 {
     m_roles.insert(std::move(role));
+}
+
+inline void wamp_session::add_testament(const testament_scope scope, std::unique_ptr<wamp_publish_message>&& testament)
+{
+    m_testaments[scope].push_back(std::move(testament));
+}
+
+inline void wamp_session::flush_testaments(const testament_scope scope)
+{
+    m_testaments[scope].clear();
+}
+
+inline const std::vector<std::unique_ptr<wamp_publish_message>>* wamp_session::get_testaments_for_scope(const testament_scope scope) const
+{
+    auto i = m_testaments.find(scope);
+    if (i != m_testaments.end()) {
+        return &i->second;
+    }
+
+    return nullptr;
 }
 
 inline std::ostream& operator<<(std::ostream& os, const wamp_session& session)

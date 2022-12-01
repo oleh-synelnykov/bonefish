@@ -97,6 +97,25 @@ void wamp_broker::detach_session(const wamp_session_id& session_id)
         m_session_subscriptions.erase(session_subscriptions_itr);
     }
 
+    // Check if there are any session testaments
+    const std::array<wamp_session::testament_scope, 2> scopes {
+        wamp_session::testament_scope::detached,
+        wamp_session::testament_scope::destroyed
+    };
+
+    for (const auto scope : scopes) {
+        const std::vector<std::unique_ptr<wamp_publish_message>>* testaments =
+            session_itr->second->get_testaments_for_scope(scope);
+
+        if (testaments && not testaments->empty()) {
+            BONEFISH_TRACE("detach session: processing testaments for scope %1%", static_cast<int>(scope));
+
+            for (const auto& testament : *testaments) {
+                process_publish_message(session_id, testament.get());
+            }
+        }
+    }
+
     m_sessions.erase(session_itr);
 }
 

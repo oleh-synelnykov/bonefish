@@ -44,6 +44,8 @@ class wamp_yield_message;
 
 class wamp_dealer
 {
+    using builtin_procedure = std::function<void(const wamp_session_id&, wamp_call_message*)>;
+
 public:
     wamp_dealer(boost::asio::io_service& io_service);
     ~wamp_dealer();
@@ -70,6 +72,11 @@ private:
     void invocation_timeout_handler(const wamp_request_id& request_id,
             const boost::system::error_code& error);
 
+    void register_builtin_procedures();
+
+    void wamp_session_add_testament(const wamp_session_id& session_id, wamp_call_message* call_message);
+    void wamp_session_flush_testaments(const wamp_session_id& session_id, wamp_call_message* call_message);
+
 private:
     /// Asynchronous event loop for executing completion handlers.
     boost::asio::io_service& m_io_service;
@@ -87,6 +94,9 @@ private:
     /// for individual unregistrations to occur as well as for all of the outstanding
     /// registrations to be cleaned up when a sessions is closed.
     std::unordered_map<wamp_session_id, std::unordered_set<wamp_registration_id>> m_session_registrations;
+
+    /// Maps built-in procedure names to the corresponding functions.
+    std::unordered_map<std::string, builtin_procedure> m_builtin_procedures;
 
     /// Maps each of the registrations to its corresponding procedure name. This
     /// allows for looking up a sessions procedure registrations based on the
