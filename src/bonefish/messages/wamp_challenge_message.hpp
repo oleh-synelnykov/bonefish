@@ -119,7 +119,7 @@ inline void wamp_challenge_message::set_auth_method(const std::string& realm)
 
 inline void wamp_challenge_message::set_extra(const msgpack::object& extra)
 {
-    assert(details.type == msgpack::type::MAP);
+    assert(extra.type == msgpack::type::MAP);
     m_extra = msgpack::object(extra, get_zone());
 }
 

@@ -123,7 +123,7 @@ inline void wamp_authenticate_message::set_signature(const std::string& signatur
 
 inline void wamp_authenticate_message::set_extra(const msgpack::object& extra)
 {
-    assert(details.type == msgpack::type::MAP);
+    assert(extra.type == msgpack::type::MAP);
     m_extra = msgpack::object(extra, get_zone());
 }
 
