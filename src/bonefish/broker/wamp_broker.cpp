@@ -20,6 +20,7 @@
 #include <bonefish/messages/wamp_error_message.hpp>
 #include <bonefish/messages/wamp_event_message.hpp>
 #include <bonefish/messages/wamp_publish_message.hpp>
+#include <bonefish/messages/wamp_publish_options.hpp>
 #include <bonefish/messages/wamp_published_message.hpp>
 #include <bonefish/messages/wamp_subscribe_message.hpp>
 #include <bonefish/messages/wamp_subscribed_message.hpp>
@@ -131,6 +132,10 @@ void wamp_broker::process_publish_message(const wamp_session_id& session_id,
     const std::string topic = publish_message->get_topic();
     const wamp_publication_id publication_id = m_publication_id_generator.generate();
 
+    // Get options before any publish_message->release_zone()
+    wamp_publish_options publish_options;
+    publish_options.unmarshal(publish_message->get_options());
+
     // Since a publish message fans out to potentially numerous event messages
     // we cannot need to be a bit smarter with how we deal with passing zone
     // ownership. For all but the last subscription we make a deep copy of the
@@ -168,13 +173,13 @@ void wamp_broker::process_publish_message(const wamp_session_id& session_id,
         }
     }
 
-    // TODO: Publish acknowledgements require support for publish options which
-    //       we currently do not yet have working.
-    //
-    //std::unique_ptr<wamp_published_message> published_message(new wamp_published_message);
-    //published_message->set_request_id(publish_message->get_request_id());
-    //published_message->set_publication_id(publication_id);
-    //session_itr->second->get_transport()->send_message(published_message.get());
+    if (publish_options.get_option_or("acknowledge", false)) {
+        std::unique_ptr<wamp_published_message> published_message(new wamp_published_message);
+        published_message->set_request_id(publish_message->get_request_id());
+        published_message->set_publication_id(publication_id);
+        BONEFISH_TRACE("%1%, %2%", *session_itr->second % *published_message);
+        session_itr->second->get_transport()->send_message(std::move(*published_message));
+    }
 }
 
 void wamp_broker::process_subscribe_message(const wamp_session_id& session_id,

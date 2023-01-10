@@ -12,6 +12,7 @@ set(SOURCES
     bonefish/messages/wamp_message_defaults.cpp
     bonefish/messages/wamp_message_factory.cpp
     bonefish/messages/wamp_message_type.cpp
+    bonefish/messages/wamp_publish_options.cpp
     bonefish/messages/wamp_result_details.cpp
     bonefish/messages/wamp_welcome_details.cpp
     bonefish/messages/wamp_yield_options.cpp
@@ -103,6 +104,7 @@ set(PRIVATE_HEADERS
     bonefish/messages/wamp_message_factory.hpp
     bonefish/messages/wamp_message_type.hpp
     bonefish/messages/wamp_publish_message.hpp
+    bonefish/messages/wamp_publish_options.hpp
     bonefish/messages/wamp_published_message.hpp
     bonefish/messages/wamp_registered_message.hpp
     bonefish/messages/wamp_register_message.hpp
