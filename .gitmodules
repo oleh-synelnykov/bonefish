@@ -6,7 +6,7 @@
 	url = https://github.com/miloyip/rapidjson.git
 [submodule "third-party/websocketpp"]
 	path = third-party/websocketpp
-	url = https://github.com/zaphoyd/websocketpp.git
+	url = https://github.com/BuddyTV/websocketpp.git
 [submodule "third-party/json-msgpack"]
 	path = third-party/json-msgpack
 	url = https://github.com/tplgy/json-msgpack.git
