@@ -17,6 +17,7 @@
 #include <bonefish/common/wamp_message_processor.hpp>
 #include <bonefish/identifiers/wamp_session_id.hpp>
 #include <bonefish/identifiers/wamp_session_id_generator.hpp>
+#include <bonefish/messages/wamp_abort_details.hpp>
 #include <bonefish/messages/wamp_abort_message.hpp>
 #include <bonefish/messages/wamp_authenticate_message.hpp>
 #include <bonefish/messages/wamp_call_message.hpp>
@@ -90,10 +91,19 @@ void wamp_message_processor::process_message(
         case wamp_message_type::HELLO:
         {
             wamp_hello_message* hello_message = static_cast<wamp_hello_message*>(message.get());
-            std::shared_ptr<wamp_router> router = m_routers->get_router(hello_message->get_realm());
+
+            const std::string realm = hello_message->get_realm();
+            std::shared_ptr<wamp_router> router = m_routers->get_router(realm);
             if (!router) {
                 std::unique_ptr<wamp_abort_message> abort_message(new wamp_abort_message);
                 abort_message->set_reason("wamp.error.no_such_realm");
+
+                // specify the realm name in the details
+                wamp_abort_details abort_details;
+                abort_details.set_detail("message", "The realm doesn't exist");
+                abort_details.set_detail("realm", realm);
+                abort_message->set_details(abort_details.marshal(abort_message->get_zone()));
+
                 transport->send_message(std::move(*abort_message));
             } else {
                 wamp_session_id id;

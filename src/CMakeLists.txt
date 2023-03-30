@@ -3,6 +3,7 @@ set(SOURCES
     bonefish/common/wamp_message_processor.cpp
     bonefish/dealer/wamp_dealer.cpp
     bonefish/identifiers/wamp_session_id_factory.cpp
+    bonefish/messages/wamp_abort_details.cpp
     bonefish/messages/wamp_authenticate_extra.cpp
     bonefish/messages/wamp_call_options.cpp
     bonefish/messages/wamp_challenge_extra.cpp
@@ -84,6 +85,7 @@ set(PRIVATE_HEADERS
     bonefish/identifiers/wamp_session_id_generator.hpp
     bonefish/identifiers/wamp_subscription_id.hpp
     bonefish/identifiers/wamp_subscription_id_generator.hpp
+    bonefish/messages/wamp_abort_details.hpp
     bonefish/messages/wamp_abort_message.hpp
     bonefish/messages/wamp_authenticate_extra.hpp
     bonefish/messages/wamp_authenticate_message.hpp
