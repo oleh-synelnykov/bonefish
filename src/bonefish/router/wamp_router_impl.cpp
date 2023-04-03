@@ -41,6 +41,10 @@
 #include <bonefish/session/wamp_session.hpp>
 #include <bonefish/trace/trace.hpp>
 
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+#include <bonefish/custom/session_authenticator.hpp>
+#endif
+
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
@@ -165,6 +169,25 @@ void wamp_router_impl::close_session(const wamp_session_id& session_id, const st
 
 bool wamp_router_impl::attach_session(const std::shared_ptr<wamp_session>& session)
 {
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+    if (m_session_authenticator) {
+        auto authentication_result = m_session_authenticator->on_attach(session);
+        if (!authentication_result.authenticated) {
+            std::unique_ptr<wamp_abort_message> abort_message(new wamp_abort_message);
+            if (authentication_result.reason.has_value()) {
+                abort_message->set_reason(authentication_result.reason.value());
+            } else {
+                abort_message->set_reason("wamp.error.not_authorized");
+            }
+            BONEFISH_TRACE("session not authorized: %1%, %2%", *session % *abort_message);
+            if (!session->get_transport()->send_message(std::move(*abort_message))) {
+                BONEFISH_ERROR("failed to send the abort message: network failure");
+            }
+            return false;
+        }
+    }
+#endif
+
     BONEFISH_TRACE("attaching session: %1%", *session);
     auto result = m_sessions.insert(
             std::make_pair(session->get_session_id(), session));
@@ -436,5 +459,11 @@ void wamp_router_impl::process_yield_message(const wamp_session_id& session_id,
 {
     m_dealer.process_yield_message(session_id, yield_message);
 }
+
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+void wamp_router_impl::set_session_authenticator(std::shared_ptr<session_authenticator> session_authenticator) {
+    m_session_authenticator = std::move(session_authenticator);
+}
+#endif
 
 } // namespace bonefish

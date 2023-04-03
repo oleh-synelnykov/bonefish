@@ -147,6 +147,16 @@ set(PRIVATE_HEADERS
 
 add_library(bonefish STATIC ${SOURCES} ${PUBLIC_HEADERS} ${PRIVATE_HEADERS})
 
+if (BONEFISH_USE_SESSION_AUTHENTICATOR)
+    target_compile_definitions(bonefish PUBLIC
+        BONEFISH_USE_SESSION_AUTHENTICATOR
+    )
+
+    target_sources(bonefish PUBLIC
+        ${CMAKE_CURRENT_LIST_DIR}/bonefish/custom/session_authenticator.hpp
+    )
+endif()
+
 target_link_libraries(bonefish
     ${Boost_LIBRARIES})
 

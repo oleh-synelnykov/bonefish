@@ -43,6 +43,10 @@ class wamp_unsubscribe_message;
 class wamp_welcome_details;
 class wamp_yield_message;
 
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+class session_authenticator;
+#endif
+
 class wamp_router
 {
 public:
@@ -82,6 +86,10 @@ public:
             wamp_unsubscribe_message* unsubscribe_message);
     void process_yield_message(const wamp_session_id& session_id,
             wamp_yield_message* yield_message);
+
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+    void set_session_authenticator(std::shared_ptr<session_authenticator> session_authenticator);
+#endif
 
 private:
     std::unique_ptr<wamp_router_impl> m_impl;
