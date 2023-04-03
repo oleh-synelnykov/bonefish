@@ -148,4 +148,10 @@ void wamp_router::process_yield_message(const wamp_session_id& session_id,
     m_impl->process_yield_message(session_id, yield_message);
 }
 
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+void wamp_router::set_session_authenticator(std::shared_ptr<session_authenticator> session_authenticator) {
+    m_impl->set_session_authenticator(std::move(session_authenticator));
+}
+#endif
+
 } // namespace bonefish

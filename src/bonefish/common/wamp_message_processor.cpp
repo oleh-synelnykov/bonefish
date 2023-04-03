@@ -125,8 +125,9 @@ void wamp_message_processor::process_message(
                         id, hello_message->get_realm(), std::move(transport));
                 session->set_roles(hello_details.get_roles());
 
-                router->attach_session(session);
-                router->process_hello_message(id, hello_message);
+                if (router->attach_session(session)){
+                    router->process_hello_message(id, hello_message);
+                }
             }
             break;
         }

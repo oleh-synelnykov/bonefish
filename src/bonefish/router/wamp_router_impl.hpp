@@ -45,6 +45,10 @@ class wamp_unregister_message;
 class wamp_unsubscribe_message;
 class wamp_yield_message;
 
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+class session_authenticator;
+#endif
+
 class wamp_router_impl
 {
 public:
@@ -85,6 +89,10 @@ public:
     void process_yield_message(const wamp_session_id& session_id,
             wamp_yield_message* yield_message);
 
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+    void set_session_authenticator(std::shared_ptr<session_authenticator> session_authenticator);
+#endif
+
 private:
     std::string m_realm;
     wamp_broker m_broker;
@@ -96,6 +104,10 @@ private:
 
     // wamp_authentication_info is kept in a separate map because not all sessions may have it
     std::unordered_map<wamp_session_id, wamp_authentication_info> m_session_auth_info;
+
+#ifdef BONEFISH_USE_SESSION_AUTHENTICATOR
+    std::shared_ptr<session_authenticator> m_session_authenticator;
+#endif
 };
 
 } // namespace bonefish
